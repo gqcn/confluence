@@ -148,3 +148,22 @@ pre > code {
 .comment-thread .panel.conf-macro {
     border: 0 !important;
 }
+
+/* Footer */
+#footer .license {
+    display:none;
+}
+ul#poweredby li:nth-child(2),
+ul#poweredby li:nth-child(3),
+ul#poweredby li:nth-child(4) {
+    display:none;
+}
+#footer .footer-body>ul>li:after {
+    display:none;
+}
+
+/* ContentMenu float */
+.aside .innerCell {
+    position:sticky;
+    top: 120px;
+}
