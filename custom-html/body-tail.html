@@ -1,0 +1,27 @@
+<script type="application/javascript">
+    // 定期自动检查并高亮代码模块
+    function autoHighlightCodeUsingPrismJs() {
+        $('pre').each(function(i, elem){
+            var handled = $(elem).attr('autoHighlightCodeUsingPrismJsHandled');
+            if (typeof(handled) != "undefined") {
+                return
+            }
+            $(elem).attr('autoHighlightCodeUsingPrismJsHandled', 1);
+            console.log("autoHighlightCodeUsingPrismJs")
+            // 获取SyntaxHighlighter brush信息，用于识别代码语言
+            var attr = $(elem).attr('data-syntaxhighlighter-params');
+            // 去掉原本的CSS样式，防止SyntaxHighlighter插件执行高亮
+            $(elem).removeClass('syntaxhighlighter-pre')
+            if (typeof(attr) == "undefined") {
+                return
+            }
+            var match = attr.match(/brush: (\w+);/);
+            if (match.length > 1) {
+                $(elem).addClass('language-'+match[1]);
+            }
+            Prism.highlightElement(elem);
+        })
+        setTimeout(autoHighlightCodeUsingPrismJs, 3000);
+    }
+    autoHighlightCodeUsingPrismJs()
+</script>
