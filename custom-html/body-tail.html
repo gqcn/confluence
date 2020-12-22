@@ -24,8 +24,12 @@
         setTimeout(autoHighlightCodeUsingPrismJs, 3000);
     }
     autoHighlightCodeUsingPrismJs()
-    // 内容菜单滚动
-    $('.aside .innerCell').hcSticky({
-        top: 110
-    });
+    // 当连接不包含HOST，那么设置为新页面跳转
+    $('a').each(function(i, elem){
+        var url = $(elem).attr('href')
+        if (url.length < 10 || url.substr(0, 4) != 'http' || url.indexOf(location.host) != -1) {
+            return
+        }
+        $(elem).attr('target', '_blank')
+    })
 </script>
