@@ -59,9 +59,50 @@
         return flag;
     }
 
-    // 监听按钮事件监听
-    function copyBtnOn() {
-        $('.copy-code').on('click',function() {
+    // 插入代码存放区
+    function isEleExist(id) {
+        if ($("#" + id).length <= 0) {
+            $("body").append($("<div>").attr("id", id).hide());
+        }
+    }
+    // 添加Copy按钮图标及样式
+    function addCopyButtonCss(i, elem) {
+        var thisBlock = $(elem);
+        // 记录代码块内容
+        var codeContent = $("<span>").text(thisBlock.text()).attr("id","code-content-id-"+i);
+        $("#code-list").append(codeContent);
+        // 添加复制按钮，添加class用于事件监听
+        var copyBtn = $("<span>").attr({
+            "style"   : "position:absolute;right:0px;top:0px;cursor:pointer;user-select:none;padding: 4px 3px;font-size:14px;",
+            "title"   : "copy",
+            "code-id" : "" + i,
+            "id"      : "copy-btn-"+i
+        }).addClass("copy-code");
+        copyBtn.html(`<svg width="24" height="24" viewBox="0 0 24 24" focusable="false" role="presentation"><g fill="currentColor"><path d="M10 19h8V8h-8v11zM8 7.992C8 6.892 8.902 6 10.009 6h7.982C19.101 6 20 6.893 20 7.992v11.016c0 1.1-.902 1.992-2.009 1.992H10.01A2.001 2.001 0 0 1 8 19.008V7.992z"></path><path d="M5 16V4.992C5 3.892 5.902 3 7.009 3H15v13H5zm2 0h8V5H7v11z"></path></g></svg>`);
+        var copyDiv = $("<div>").attr({
+            "style":"color:#f8f8f2;position:relative; z-index:1;margin-top: 8px;"
+        });
+        copyDiv.append(copyBtn)
+        thisBlock.parent().before(copyDiv);
+        thisBlock.parent().attr("style","position: relative;").attr("class","check-scroll");
+    }
+
+    $(function(){
+        isEleExist("code-list");
+        $("#code-list").html("");
+        $('pre').each(function(i, elem1) {
+            var ok = false
+            $(elem1).find('code').each(function(j, elem2) {
+                ok = true
+                addCopyButtonCss(i, elem2)
+            });
+            if (ok) {
+                return null
+            }
+            addCopyButtonCss(i, elem1)
+        });
+        // 监听按钮事件监听
+        $('.copy-code').on('click', function() {
             var span        = $(this);
             var id          = span.attr("code-id");
             var codeContent = $("#code-content-id-"+id);
@@ -74,36 +115,5 @@
                 span.css("color","");
             }, 500);
         });
-    }
-    // 插入代码存放区
-    function isEleExist(id) {
-        if ($("#"+id).length <= 0) {
-            $("body").append($("<div>").attr("id", id).hide());
-        }
-    }
-    $(function(){
-        isEleExist("code-list");
-        $("#code-list").html("");
-        $('pre').each(function(i,block){
-            var thisBlock = $(block);
-            //记录代码块内容
-            var codeContent=$("<span>").text(thisBlock.text()).attr("id","code-content-id-"+i);
-            $("#code-list").append(codeContent);
-            // 添加复制按钮，添加class用于事件监听
-            var copyBtn = $("<span>").attr({
-                "style"   : "position:absolute;right:0px;top:0px;cursor:pointer;user-select:none;padding: 4px 3px;font-size:14px;",
-                "title"   : "copy",
-                "code-id" : "" + i,
-                "id"      : "copy-btn-"+i
-            }).addClass("copy-code");
-            copyBtn.html(`<svg width="24" height="24" viewBox="0 0 24 24" focusable="false" role="presentation"><g fill="currentColor"><path d="M10 19h8V8h-8v11zM8 7.992C8 6.892 8.902 6 10.009 6h7.982C19.101 6 20 6.893 20 7.992v11.016c0 1.1-.902 1.992-2.009 1.992H10.01A2.001 2.001 0 0 1 8 19.008V7.992z"></path><path d="M5 16V4.992C5 3.892 5.902 3 7.009 3H15v13H5zm2 0h8V5H7v11z"></path></g></svg>`);
-            var copyDiv = $("<div>").attr({
-                "style":"color:#f8f8f2;position:relative; z-index:1;margin-top: 8px;"
-            });
-            copyDiv.append(copyBtn)
-            thisBlock.parent().before(copyDiv);
-            thisBlock.parent().attr("style","position: relative;").attr("class","check-scroll");
-        });
-        copyBtnOn();
     });
 </script>
