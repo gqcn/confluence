@@ -1,6 +1,6 @@
 // /confluence/WEB-INF/atlassian-bundled-plugins/confluence-mobile-17.10.3.jar/atlassian-min.js
-$('head').append('<script src="https://itician.org/statics/plugins/prismjs-1.22.0/prism.min.js"></script>');
-$('head').append('<script src="https://itician.org/statics/plugins/prismjs-1.22.0/plugins/autoloader/prism-autoloader.min.js"></script>');
+$('head').append('<script src="https://cdn.jsdelivr.net/npm/prismjs@1.22.0/prism.min.js"></script>');
+$('head').append('<script src="https://cdn.jsdelivr.net/npm/prismjs@1.22.0/plugins/autoloader/prism-autoloader.min.js"></script>');
 
 // 定期自动检查并高亮代码模块
 function autoHighlightCodeUsingPrismJs() {
