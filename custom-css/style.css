@@ -148,6 +148,10 @@ pre > code {
     border: 0 !important;
 }
 
+.confluence-information-macro .conf-macro {
+    background: transparent !important;
+}
+
 /* Footer */
 #footer .license {
     display:none;
