@@ -1,5 +1,7 @@
 [site]
-    keywords = "PHP转Go,Java转Go,Laravel,SprintBoot,Django,Go,MVC,Cookie,Session,ORM,golang,cache,logger,router,goframe,goframe框架,gf,go框架,web框架,日志,路由,中间件,数据库,高性能,微服务,官网"
+    title       = "ITician是开源免费的信息技术知识库, 优秀开源项目WIKI知识库"
+    keywords    = "PHP转Go,Java转Go,PHP,Java,Python,Laravel,SprintBoot,Django,Go,MVC,Cookie,Session,ORM,golang,cache,logger,router,goframe,goframe框架,gf,go框架,web框架,日志,路由,中间件,数据库,高性能,微服务,官网"
+    description = "ITician.org是开源免费的信息技术知识库。GoFrame是一款模块化、高性能、企业级的Go基础开发框架,是Gitee GVP最有价值项目,Gitee千星项目,2020年度开源中国TOP30开源项目。PHP转Go非常舒服,Java转Go非常舒服。简洁、易用,模块化、低耦合,高性能与稳定性,高代码与文档质量。类似PHP中的Laravel,Java中的SpringBoot,Python中的Django。"
 
 [proxy]
     address  = "127.0.0.1:8199"

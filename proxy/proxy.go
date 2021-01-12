@@ -81,7 +81,7 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				g.Log().Error(err)
 			}
-			responseHandler(writer)
+			responseHandler(writer, r)
 			// 将缓存的返回内容输出到客户端
 			writer.OutputBuffer()
 		}()

@@ -16,7 +16,7 @@ func requestBeforeProxyHandler(r *http.Request) {
 }
 
 // 处理返回
-func responseHandler(writer *ResponseWriter) {
+func responseHandler(writer *ResponseWriter, r *http.Request) {
 	var (
 		responseBody = writer.BufferString()
 	)
@@ -32,15 +32,22 @@ func responseHandler(writer *ResponseWriter) {
 		descriptionMeta string
 	)
 	keywordsMeta = fmt.Sprintf(`<meta name="keywords" content="%s" />`, g.Cfg().GetString("site.keywords"))
-	descriptionMeta, _ = gregex.ReplaceString(`[\s\S]+(<div\s+id="main\-content")`, `$1`, responseBody)
-	descriptionMeta = ghtml.StripTags(descriptionMeta)
-	descriptionMeta = gstr.TrimLeft(descriptionMeta)
-	descriptionMeta = gstr.SubStrRune(descriptionMeta, 0, 360)
-	descriptionMeta = fmt.Sprintf(`<meta name="description" content="%s" />`, descriptionMeta)
-	responseBody = gstr.ReplaceByMap(responseBody, g.MapStrStr{
-		`</title>`: `</title>` + keywordsMeta + descriptionMeta,
-		`<meta name="robots" content="noindex,nofollow">`: "",
-		`<meta name="robots" content="noarchive">`:        "",
-	})
+	if gstr.Contains(responseBody, `id="main-content"`) {
+		descriptionMeta, _ = gregex.ReplaceString(`[\s\S]+(<div\s+id="main\-content")`, `$1`, responseBody)
+		descriptionMeta = ghtml.StripTags(descriptionMeta)
+		descriptionMeta, _ = gregex.ReplaceString(`<.+?>`, ``, descriptionMeta)
+		descriptionMeta, _ = gregex.ReplaceString(`\s{2,}`, ` `, descriptionMeta)
+		descriptionMeta = gstr.SubStrRune(descriptionMeta, 0, 360)
+		descriptionMeta = gstr.Trim(descriptionMeta)
+		descriptionMeta = fmt.Sprintf(`<meta name="description" content="%s" />`, descriptionMeta)
+	} else {
+		descriptionMeta = fmt.Sprintf(`<meta name="description" content="%s" />`, g.Cfg().GetString("site.description"))
+	}
+	if r.URL.Path == "/" {
+		responseBody = gstr.Replace(responseBody, `<title>`, `<title>`+g.Cfg().GetString("site.title")+` - `, 1)
+	}
+	responseBody = gstr.Replace(responseBody, `</title>`, `</title>`+keywordsMeta+descriptionMeta, 1)
+	responseBody = gstr.Replace(responseBody, `<meta name="robots" content="noindex,nofollow">`, ``, 1)
+	responseBody = gstr.Replace(responseBody, `<meta name="robots" content="noarchive">`, ``, 1)
 	writer.OverwriteString(responseBody)
 }
