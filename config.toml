@@ -1,0 +1,17 @@
+[site]
+    keywords = "PHP转Go,Java转Go,Laravel,SprintBoot,Django,Go,MVC,Cookie,Session,ORM,golang,cache,logger,router,goframe,goframe框架,gf,go框架,web框架,日志,路由,中间件,数据库,高性能,微服务,官网"
+
+[proxy]
+    address  = "127.0.0.1:8199"
+    upstream = "http://192.168.1.110:8090/"
+
+# 工具相关配置
+[gfcli]
+    # 工具编译配置
+    [gfcli.build]
+        name     = "confluence-proxy"
+        arch     = "amd64"
+        system   = "linux"
+        pack     = ""
+        mod      = ""
+        cgo      = 0
