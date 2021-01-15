@@ -32,7 +32,7 @@ func responseHandler(writer *ResponseWriter, r *http.Request) {
 		descriptionMeta string
 	)
 	keywordsMeta = fmt.Sprintf(`<meta name="keywords" content="%s" />`, g.Cfg().GetString("site.keywords"))
-	if gstr.Contains(responseBody, `id="main-content"`) {
+	if gstr.Contains(responseBody, `class="wiki-content"`) {
 		descriptionMeta, _ = gregex.ReplaceString(`[\s\S]+(<div.+?class="wiki\-content")`, `$1`, responseBody)
 		descriptionMeta = ghtml.StripTags(descriptionMeta)
 		descriptionMeta, _ = gregex.ReplaceString(`<.+?>`, ``, descriptionMeta)
