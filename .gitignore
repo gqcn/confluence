@@ -16,3 +16,4 @@ cbuild
 .vscode/
 go.sum
 .example/other/
+confluence-seo/config.toml

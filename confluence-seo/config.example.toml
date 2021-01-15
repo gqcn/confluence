@@ -1,0 +1,21 @@
+
+# 数据库配置
+[database]
+    link   = "mysql:root:12345678@tcp(itician.org:3306)/confluence"
+    debug  = true
+
+# 百度资源API
+[baidu]
+    [baidu.ziyuan]
+        token = "WzASXG5ZvBpvKWnV"
+
+# 工具相关配置
+[gfcli]
+    # 工具编译配置
+    [gfcli.build]
+        name     = "confluence-seo"
+        arch     = "amd64"
+        system   = "linux"
+        pack     = ""
+        mod      = ""
+        cgo      = 0
