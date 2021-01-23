@@ -6,6 +6,7 @@ import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gproc"
+	"github.com/gogf/gf/text/gstr"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -31,6 +32,8 @@ var (
 		// 文档文件
 		"doc", "docx", "pdf", "xls", "xlsx", "ppt", "txt", "log", "psd", "md",
 	})
+	// 防盗链允许访问域名
+	staticDefenderNoneBlocks = gstr.SplitAndTrim(g.Cfg().GetString("proxy.staticDefenderNoneBlocks"), ",")
 )
 
 func init() {
@@ -65,8 +68,6 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err error
 	)
-	// 创建自定义的Writer，支持缓存控制
-	writer := NewResponseWriter(w)
 	// 判断静态文件请求
 	isStaticRequest := false
 	if ext := gfile.ExtName(r.URL.Path); ext != "" {
@@ -74,6 +75,23 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 			isStaticRequest = true
 		}
 	}
+	// 检测反向代理配置，如果不存在则返回404
+	if upstream == "" {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(http.StatusText(http.StatusInternalServerError)))
+		return
+	}
+
+	// 防盗链
+	if isStaticRequest && defendStealing(w, r) {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(http.StatusText(http.StatusForbidden)))
+		return
+	}
+
+	// 创建自定义的Writer，支持缓存控制
+	writer := NewResponseWriter(w)
+
 	// 非静态文件请求才执行内容替换
 	if !isStaticRequest {
 		// 反向代理日志记录
@@ -87,12 +105,7 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 		}()
 		requestBeforeProxyHandler(r)
 	}
-	// 检测反向代理配置，如果不存在则返回404
-	if upstream == "" {
-		writer.WriteHeader(http.StatusNotFound)
-		writer.Write([]byte(http.StatusText(http.StatusNotFound)))
-		return
-	}
+
 	// 反向代理请求处理，后端HTTP目标服务统一使用HTTP
 	var u *url.URL
 	u, err = url.Parse(upstream)
@@ -114,4 +127,29 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 		// 非静态文件请求使用缓存Writer
 		proxy.ServeHTTP(writer, r)
 	}
+}
+
+// 防盗链。如果防盗成功，那么返回true，否则false。
+func defendStealing(w http.ResponseWriter, r *http.Request) bool {
+	if ext := gfile.ExtName(r.URL.Path); ext != "" {
+		switch ext {
+		case
+			// 样式文件
+			"js", "json", "css", "map", "less", "sass",
+			// 图片文件
+			"png", "gif", "svg", "jpg", "jpeg", "bmp",
+			// 字体文件
+			"woff", "woff2", "ttf", "eot":
+			var (
+				referer = r.Referer()
+			)
+			for _, v := range staticDefenderNoneBlocks {
+				if gstr.Contains(referer, v) {
+					return false
+				}
+			}
+			return true
+		}
+	}
+	return false
 }
