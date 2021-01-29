@@ -131,6 +131,9 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 
 // 防盗链。如果防盗成功，那么返回true，否则false。
 func defendStealing(w http.ResponseWriter, r *http.Request) bool {
+	// 关闭防盗链
+	return false
+
 	if ext := gfile.ExtName(r.URL.Path); ext != "" {
 		switch ext {
 		case

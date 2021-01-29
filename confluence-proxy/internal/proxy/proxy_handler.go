@@ -36,7 +36,7 @@ func responseHandler(writer *ResponseWriter, r *http.Request) {
 		descriptionMeta, _ = gregex.ReplaceString(`[\s\S]+(<div.+?class="wiki\-content")`, `$1`, responseBody)
 		descriptionMeta = ghtml.StripTags(descriptionMeta)
 		descriptionMeta, _ = gregex.ReplaceString(`<.+?>`, ``, descriptionMeta)
-		descriptionMeta, _ = gregex.ReplaceString(`\s{2,}`, ` `, descriptionMeta)
+		descriptionMeta, _ = gregex.ReplaceString(`\s+`, ` `, descriptionMeta)
 		descriptionMeta = gstr.SubStrRune(descriptionMeta, 0, 360)
 		descriptionMeta = gstr.Trim(descriptionMeta)
 		descriptionMeta = fmt.Sprintf(`<meta name="description" content="%s" />`, descriptionMeta)
@@ -46,6 +46,9 @@ func responseHandler(writer *ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" {
 		responseBody = gstr.Replace(responseBody, `<title>`, `<title>`+g.Cfg().GetString("site.title")+` - `, 1)
 	}
+	responseBody = gstr.Replace(responseBody, ` - GoFrame (ZH) - `, ` - `, 1)
+	responseBody = gstr.Replace(responseBody, ` - 主页面 - `, ` - `, 1)
+	responseBody = gstr.Replace(responseBody, ` - Dashboard - `, ` - `, 1)
 	responseBody = gstr.Replace(responseBody, `</title>`, `</title>`+keywordsMeta+descriptionMeta, 1)
 	responseBody = gstr.Replace(responseBody, `<meta name="robots" content="noindex,nofollow">`, ``, 1)
 	responseBody = gstr.Replace(responseBody, `<meta name="robots" content="noarchive">`, ``, 1)
