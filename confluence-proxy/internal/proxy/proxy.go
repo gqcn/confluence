@@ -28,7 +28,7 @@ var (
 		// 字体文件
 		"woff", "woff2", "ttf", "eot",
 		// 压缩文件
-		"zip", "rar", "7z", "gz",
+		"zip", "rar", "7z", "gz", "bz2",
 		// 文档文件
 		"doc", "docx", "pdf", "xls", "xlsx", "ppt", "txt", "log", "psd", "md",
 	})
