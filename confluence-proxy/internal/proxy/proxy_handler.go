@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"fmt"
+	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/encoding/gcompress"
 	"github.com/gogf/gf/encoding/ghtml"
 	"github.com/gogf/gf/frame/g"
@@ -11,7 +12,22 @@ import (
 )
 
 var (
-	cdnStaticFileTypesStr = gstr.Join(staticFileExtSet.Slice(), "|")
+	staticFileExtSetForCdn = gset.NewStrSetFrom([]string{
+		// 样式文件
+		"map", "less", "sass", "js", "json", "css",
+		// 网页文件
+		"xml", "htm", "html", "xhtml", "shtml", "tpl",
+		// 图片文件
+		"png", "gif", "svg", "jpg", "jpeg", "bmp", "ico",
+		// 字体文件
+		"woff", "woff2", "ttf", "eot",
+		// 压缩文件
+		"zip", "rar", "7z", "gz", "bz2",
+		// 文档文件
+		"doc", "docx", "pdf", "xls", "xlsx", "ppt", "txt", "log", "psd", "md",
+	})
+
+	cdnStaticFileTypesStr = gstr.Join(staticFileExtSetForCdn.Slice(), "|")
 )
 
 // 处理返回
@@ -48,21 +64,33 @@ func responseHandler(writer *ResponseWriter, r *http.Request) {
 	} else {
 		descriptionMeta = fmt.Sprintf(`<meta name="description" content="%s" />`, g.Cfg().GetString("site.description"))
 	}
-	if r.URL.Path == "/" {
-		responseBody = gstr.Replace(responseBody, `<title>`, `<title>`+g.Cfg().GetString("site.title")+` - `, 1)
-	}
 	// SEO标题
-	responseBody = gstr.Replace(responseBody, ` - GoFrame (ZH) - `, ` - `, 1)
-	responseBody = gstr.Replace(responseBody, ` - 主页面 - `, ` - `, 1)
+	responseBody = gstr.Replace(responseBody, `主页面 - `, ``, 1)
 	responseBody = gstr.Replace(responseBody, ` - Dashboard - `, ` - `, 1)
+	responseBody = gstr.Replace(responseBody, ` - GoFrame (ZH) - `, ` - `, 1)
 	responseBody = gstr.Replace(responseBody, `</title>`, `</title>`+keywordsMeta+descriptionMeta, 1)
-	// CDN连接处理
-	responseBody, _ = gregex.ReplaceString(
-		fmt.Sprintf(`(src|link)="/([^"']+\.(%s)[^"']*)"`, cdnStaticFileTypesStr),
-		`$1="https://gfcdn.johng.cn/$2"`,
-		responseBody,
-	)
+
+	// CDN处理
+	//responseBody = handleContentReplacementForCDN(responseBody)
+
 	// 去掉robots，允许搜索引擎收录
 	responseBody = gstr.Replace(responseBody, `<meta name="robots"`, `<meta name="no-robots"`, 1)
 	writer.OverwriteString(responseBody)
+}
+
+// CDN连接处理
+func handleContentReplacementForCDN(responseBody string) string {
+	// HTML CSS/JS
+	responseBody, _ = gregex.ReplaceString(
+		fmt.Sprintf(`(src|href)="/([^"']+\.(%s)[^"']*)"`, cdnStaticFileTypesStr),
+		`$1="https://gfcdn.johng.cn/$2"`,
+		responseBody,
+	)
+	// CSS URL
+	responseBody, _ = gregex.ReplaceString(
+		fmt.Sprintf(`url\(/(.+\.(%s).*)\)`, cdnStaticFileTypesStr),
+		`url(/https://gfcdn.johng.cn/$1"`,
+		responseBody,
+	)
+	return responseBody
 }

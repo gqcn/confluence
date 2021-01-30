@@ -20,7 +20,8 @@ var (
 	// 常见静态文件访问不做链路跟踪处理，提高请求转发性能
 	staticFileExtSet = gset.NewStrSetFrom([]string{
 		// 样式文件
-		"js", "json", "css", "map", "less", "sass",
+		"map", "less", "sass",
+		"js", "json", "css",
 		// 网页文件
 		"xml", "htm", "html", "xhtml", "shtml", "tpl",
 		// 图片文件
