@@ -66,6 +66,7 @@ func responseHandler(writer *ResponseWriter, r *http.Request) {
 	}
 	// SEO标题
 	responseBody = gstr.Replace(responseBody, `主页面 - `, ``, 1)
+	responseBody = gstr.Replace(responseBody, `Confluence Mobile - `, ``, 1)
 	responseBody = gstr.Replace(responseBody, ` - Dashboard - `, ` - `, 1)
 	responseBody = gstr.Replace(responseBody, ` - GoFrame (ZH) - `, ` - `, 1)
 	responseBody = gstr.Replace(responseBody, `</title>`, `</title>`+keywordsMeta+descriptionMeta, 1)
