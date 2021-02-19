@@ -72,7 +72,11 @@ func responseHandler(writer *ResponseWriter, r *http.Request) {
 	responseBody = gstr.Replace(responseBody, `</title>`, `</title>`+keywordsMeta+descriptionMeta, 1)
 
 	// CDN处理
-	//responseBody = handleContentReplacementForCDN(responseBody)
+	if gstr.Contains(r.URL.Path, "/viewpage.action") || gstr.Contains(r.URL.Path, "/display/") {
+		if !gstr.Contains(responseBody, "aui-iconfont-locked") {
+			responseBody = handleContentReplacementForCDN(responseBody)
+		}
+	}
 
 	// 去掉robots，允许搜索引擎收录
 	responseBody = gstr.Replace(responseBody, `<meta name="robots"`, `<meta name="no-robots"`, 1)
@@ -88,10 +92,10 @@ func handleContentReplacementForCDN(responseBody string) string {
 		responseBody,
 	)
 	// CSS URL
-	responseBody, _ = gregex.ReplaceString(
-		fmt.Sprintf(`url\(/(.+\.(%s).*)\)`, cdnStaticFileTypesStr),
-		`url(/https://gfcdn.johng.cn/$1"`,
-		responseBody,
-	)
+	//responseBody, _ = gregex.ReplaceString(
+	//	fmt.Sprintf(`url\(/(.+\.(%s).*)\)`, cdnStaticFileTypesStr),
+	//	`url(/https://gfcdn.johng.cn/$1"`,
+	//	responseBody,
+	//)
 	return responseBody
 }
