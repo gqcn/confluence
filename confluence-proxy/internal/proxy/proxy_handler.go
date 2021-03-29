@@ -73,7 +73,8 @@ func responseHandler(writer *ResponseWriter, r *http.Request) {
 
 	// CDN处理
 	if gstr.Contains(r.URL.Path, "/viewpage.action") || gstr.Contains(r.URL.Path, "/display/") {
-		if !gstr.Contains(responseBody, "aui-iconfont-locked") {
+		// 文章受限访问
+		if !gstr.Contains(responseBody, "aui-iconfont-locked") && !gstr.Contains(responseBody, "aui-iconfont-unlocked restricted") {
 			responseBody = handleContentReplacementForCDN(responseBody)
 		}
 	}
