@@ -1,0 +1,6 @@
+
+# 数据库配置
+[database]
+    link   = "mysql:root:12345678@tcp(goframe.org:3306)/confluence"
+    debug  = true
+

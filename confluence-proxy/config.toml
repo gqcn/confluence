@@ -6,7 +6,7 @@
 [proxy]
     address  = "127.0.0.1:8199"
     upstream = "http://192.168.1.110:8090/"
-    staticDefenderNoneBlocks = "itician.org, goframe.org, johng.cn"
+    staticDefenderNoneBlocks = "goframe.org, goframe.org, johng.cn"
 
 # 工具相关配置
 [gfcli]
