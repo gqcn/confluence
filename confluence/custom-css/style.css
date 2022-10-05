@@ -1,3 +1,7 @@
+#action-export-pdf-link, #action-export-word-link {
+    display: none;
+}
+
 /* PrismJS 1.15.0 */
 .wysiwyg-macro-body pre,
 code[class*="language-"],
@@ -174,3 +178,6 @@ ul#poweredby li:nth-child(4) {
     max-height: 400px;
     overflow: auto;
 }
+
+
+
