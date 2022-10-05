@@ -5,7 +5,7 @@
 
 [proxy]
     address  = "127.0.0.1:8199"
-    upstream = "http://tencent.coding.woa.com/"
+    upstream = "http://192.168.1.110:8090/"
     staticDefenderNoneBlocks = "goframe.org, goframe.org, johng.cn"
 
 # 工具相关配置

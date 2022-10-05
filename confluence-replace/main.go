@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/encoding/ghtml"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 var testContent = `
@@ -69,7 +69,7 @@ func replaceContentCodeToMicro(content string) string {
 		content,
 		func(match []string) string {
 			var (
-				language = match[1]
+				language    = match[1]
 				codeContent = ghtml.EntitiesDecode(match[2])
 			)
 			if language == "undefined" {
@@ -80,7 +80,7 @@ func replaceContentCodeToMicro(content string) string {
 <ac:parameter ac:name="language">%s</ac:parameter>
 <ac:plain-text-body><![CDATA[%s]]></ac:plain-text-body>
 </ac:structured-macro>
-`,), language, gstr.Trim(codeContent))
+`), language, gstr.Trim(codeContent))
 			return replacedContent
 		},
 	)
@@ -103,7 +103,7 @@ func replaceContentToV2(content string) string {
 					return match[0]
 				}
 			}
-			return match[1]+"v2/"+match[2]
+			return match[1] + "v2/" + match[2]
 		},
 	)
 	if err != nil {
@@ -112,7 +112,7 @@ func replaceContentToV2(content string) string {
 	return newContent
 }
 
-func getContentIds(ctx context.Context) []int{
+func getContentIds(ctx context.Context) []int {
 	sql := `
 SELECT DISTINCT CONTENTID FROM CONTENT 
 WHERE CONTENTTYPE='PAGE' and CONTENT_STATUS='current' and SPACEID=1310721

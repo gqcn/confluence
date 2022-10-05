@@ -52,6 +52,11 @@ func (w *ResponseWriter) WriteString(s string) (n int, err error) {
 	return w.buffer.WriteString(s)
 }
 
+func (w *ResponseWriter) Overwrite(s []byte) (n int, err error) {
+	w.buffer.Reset()
+	return w.buffer.Write(s)
+}
+
 func (w *ResponseWriter) OverwriteString(s string) (n int, err error) {
 	w.buffer.Reset()
 	return w.buffer.WriteString(s)
@@ -68,7 +73,7 @@ func (w *ResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	return w.writer.(http.Hijacker).Hijack()
 }
 
-// BufferString returns the buffered content as []byte.
+// Buffer returns the buffered content as []byte.
 func (w *ResponseWriter) Buffer() []byte {
 	return w.buffer.Bytes()
 }
@@ -95,7 +100,7 @@ func (w *ResponseWriter) OutputBuffer() {
 		w.buffer.WriteString(http.StatusText(w.status))
 	}
 	if w.buffer.Len() > 0 {
-		w.writer.Write(w.buffer.Bytes())
+		_, _ = w.writer.Write(w.buffer.Bytes())
 		w.buffer.Reset()
 	}
 }

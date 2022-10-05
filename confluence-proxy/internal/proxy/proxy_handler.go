@@ -2,13 +2,14 @@ package proxy
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/encoding/gcompress"
-	"github.com/gogf/gf/encoding/ghtml"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
 	"net/http"
+
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/encoding/gcompress"
+	"github.com/gogf/gf/v2/encoding/ghtml"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 var (
@@ -31,28 +32,53 @@ var (
 )
 
 // 处理返回
-func requestBeforeProxyHandler(r *http.Request) {
-
-}
+func requestBeforeProxyHandler(r *http.Request) {}
 
 // 处理返回
 func responseHandler(writer *ResponseWriter, r *http.Request) {
 	var (
 		responseBody = writer.BufferString()
 	)
-	// 解析并清除压缩
+	// 处理gzip压缩
 	if gstr.Equal(writer.Header().Get("Content-Encoding"), "gzip") {
 		writer.Header().Del("Content-Encoding")
 		content, _ := gcompress.UnGzip(writer.Buffer())
 		responseBody = string(content)
+		defer func() {
+			content, _ = gcompress.Gzip([]byte(responseBody))
+			responseBody = string(content)
+			writer.Header().Add("Content-Encoding", "gzip")
+		}()
 	}
+	// 写入返回数据
+	defer func() {
+		_, _ = writer.OverwriteString(responseBody)
+	}()
+
+	// SEO处理
+	responseBody = handleSEOReplacement(r, responseBody)
+
+	// CDN处理
+	// 从 2022.01.01 开始 johng.cn 备案失效，这里不能继续使用CDN，后续再处理。
+	// responseBody = handleContentReplacement(r, responseBody)
+
+	// 去掉robots，允许搜索引擎收录
+	responseBody = gstr.Replace(responseBody, `<meta name="robots"`, `<meta name="no-robots"`, 1)
+
+}
+
+func handleSEOReplacement(r *http.Request, responseBody string) string {
 	// 增加keywords/description
 	var (
+		ctx             = r.Context()
 		keywordsMeta    string
 		descriptionMeta string
 	)
 	// SEO标题 - keywords, description
-	keywordsMeta = fmt.Sprintf(`<meta name="keywords" content="%s" />`, g.Cfg().GetString("site.keywords"))
+	keywordsMeta = fmt.Sprintf(
+		`<meta name="keywords" content="%s" />`,
+		g.Cfg().MustGet(ctx, "site.keywords").String(),
+	)
 	if gstr.Contains(responseBody, `class="wiki-content"`) {
 		descriptionMeta, _ = gregex.ReplaceString(`[\s\S]+(<div.+?class="wiki\-content")`, `$1`, responseBody)
 		descriptionMeta = ghtml.StripTags(descriptionMeta)
@@ -62,30 +88,40 @@ func responseHandler(writer *ResponseWriter, r *http.Request) {
 		descriptionMeta = gstr.Trim(descriptionMeta)
 		descriptionMeta = fmt.Sprintf(`<meta name="description" content="%s" />`, descriptionMeta)
 	} else {
-		descriptionMeta = fmt.Sprintf(`<meta name="description" content="%s" />`, g.Cfg().GetString("site.description"))
+		descriptionMeta = fmt.Sprintf(
+			`<meta name="description" content="%s" />`,
+			g.Cfg().MustGet(ctx, "site.description").String(),
+		)
 	}
-	// SEO标题
 	responseBody = gstr.Replace(responseBody, `主页面 - `, ``, 1)
+	responseBody = gstr.Replace(responseBody, `Confluence 手机版本 - `, ``, 1)
 	responseBody = gstr.Replace(responseBody, `Confluence Mobile - `, ``, 1)
 	responseBody = gstr.Replace(responseBody, ` - Dashboard - `, ` - `, 1)
 	responseBody = gstr.Replace(responseBody, ` - GoFrame (ZH) - `, ` - `, 1)
 	responseBody = gstr.Replace(responseBody, `</title>`, `</title>`+keywordsMeta+descriptionMeta, 1)
+	return responseBody
+}
 
-	// CDN处理
+func checkLoginByContent(responseBody string) bool {
+	if !gstr.Contains(responseBody, "aui-iconfont-locked") &&
+		!gstr.Contains(responseBody, "aui-iconfont-unlocked restricted") {
+		return false
+	}
+	return true
+}
+
+func handleCDNReplacement(r *http.Request, responseBody string) string {
 	if gstr.Contains(r.URL.Path, "/viewpage.action") || gstr.Contains(r.URL.Path, "/display/") {
 		// 文章受限访问
-		if !gstr.Contains(responseBody, "aui-iconfont-locked") && !gstr.Contains(responseBody, "aui-iconfont-unlocked restricted") {
-			responseBody = handleContentReplacementForCDN(responseBody)
+		if !checkLoginByContent(responseBody) {
+			responseBody = handleCDNReplacementURL(responseBody)
 		}
 	}
-
-	// 去掉robots，允许搜索引擎收录
-	responseBody = gstr.Replace(responseBody, `<meta name="robots"`, `<meta name="no-robots"`, 1)
-	writer.OverwriteString(responseBody)
+	return responseBody
 }
 
 // CDN连接处理
-func handleContentReplacementForCDN(responseBody string) string {
+func handleCDNReplacementURL(responseBody string) string {
 	// HTML CSS/JS
 	responseBody, _ = gregex.ReplaceString(
 		fmt.Sprintf(`(src|href)="/([^"']+\.(%s)[^"']*)"`, cdnStaticFileTypesStr),
@@ -93,10 +129,10 @@ func handleContentReplacementForCDN(responseBody string) string {
 		responseBody,
 	)
 	// CSS URL
-	//responseBody, _ = gregex.ReplaceString(
-	//	fmt.Sprintf(`url\(/(.+\.(%s).*)\)`, cdnStaticFileTypesStr),
-	//	`url(/https://gfcdn.johng.cn/$1"`,
-	//	responseBody,
-	//)
+	responseBody, _ = gregex.ReplaceString(
+		fmt.Sprintf(`url\(/(.+\.(%s).*)\)`, cdnStaticFileTypesStr),
+		`url(/https://gfcdn.johng.cn/$1"`,
+		responseBody,
+	)
 	return responseBody
 }

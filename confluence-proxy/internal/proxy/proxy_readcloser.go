@@ -12,7 +12,7 @@ type ReadCloser struct {
 	repeatable bool
 }
 
-// NewRepeatReadCloser creates and returns a RepeatReadCloser object.
+// NewReadCloser creates and returns a RepeatReadCloser object.
 func NewReadCloser(content []byte, repeatable bool) io.ReadCloser {
 	return &ReadCloser{
 		content:    content,
@@ -38,4 +38,3 @@ func (b *ReadCloser) Read(p []byte) (n int, err error) {
 func (b *ReadCloser) Close() error {
 	return nil
 }
-

@@ -2,21 +2,23 @@ package proxy
 
 import (
 	"errors"
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gproc"
-	"github.com/gogf/gf/text/gstr"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"time"
+
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gproc"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 var (
 	server   *http.Server
-	address  = g.Cfg().GetString("proxy.address")
-	upstream = g.Cfg().GetString("proxy.upstream")
+	address  = g.Cfg().MustGet(gctx.GetInitCtx(), "proxy.address").String()
+	upstream = g.Cfg().MustGet(gctx.GetInitCtx(), "proxy.upstream").String()
 	// 常见静态文件访问不做链路跟踪处理，提高请求转发性能
 	staticFileExtSet = gset.NewStrSetFrom([]string{
 		// 样式文件
@@ -34,15 +36,18 @@ var (
 		"doc", "docx", "pdf", "xls", "xlsx", "ppt", "txt", "log", "psd", "md",
 	})
 	// 防盗链允许访问域名
-	staticDefenderNoneBlocks = gstr.SplitAndTrim(g.Cfg().GetString("proxy.staticDefenderNoneBlocks"), ",")
+	staticDefenderNoneBlocks = gstr.SplitAndTrim(
+		g.Cfg().MustGet(gctx.GetInitCtx(), "proxy.staticDefenderNoneBlocks").String(),
+		",",
+	)
 )
 
 func init() {
 	if address == "" {
-		g.Log().Fatal("http proxy address cannot be empty")
+		g.Log().Fatal(gctx.GetInitCtx(), "http proxy address cannot be empty")
 	}
 	if upstream == "" {
-		g.Log().Fatal("http proxy upstream cannot be empty")
+		g.Log().Fatal(gctx.GetInitCtx(), "http proxy upstream cannot be empty")
 	}
 }
 
@@ -55,12 +60,12 @@ func Run() {
 		IdleTimeout:  time.Minute,
 	}
 	// 启动HTTP Server服务
-	g.Log().Printf("%d: http proxy start running on %s", gproc.Pid(), address)
+	g.Log().Printf(gctx.GetInitCtx(), "%d: http proxy start running on %s", gproc.Pid(), address)
 	if err := server.ListenAndServe(); err != nil {
 		if errors.Is(err, http.ErrServerClosed) {
 			return
 		}
-		g.Log().Error(err)
+		g.Log().Error(gctx.GetInitCtx(), err)
 	}
 }
 
@@ -68,6 +73,7 @@ func Run() {
 func httpHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		err error
+		ctx = r.Context()
 	)
 	// 判断静态文件请求
 	isStaticRequest := false
@@ -79,16 +85,17 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 	// 检测反向代理配置，如果不存在则返回404
 	if upstream == "" {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(http.StatusText(http.StatusInternalServerError)))
+		_, _ = w.Write([]byte(http.StatusText(http.StatusInternalServerError)))
 		return
 	}
 
 	// 防盗链
-	if isStaticRequest && defendStealing(w, r) {
-		w.WriteHeader(http.StatusForbidden)
-		w.Write([]byte(http.StatusText(http.StatusForbidden)))
-		return
-	}
+	// 2022.01.01 关闭防盗链
+	//if isStaticRequest && defendStealing(w, r) {
+	//	w.WriteHeader(http.StatusForbidden)
+	//	_, _ = w.Write([]byte(http.StatusText(http.StatusForbidden)))
+	//	return
+	//}
 
 	// 创建自定义的Writer，支持缓存控制
 	writer := NewResponseWriter(w)
@@ -98,7 +105,7 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 		// 反向代理日志记录
 		defer func() {
 			if err != nil {
-				g.Log().Error(err)
+				g.Log().Error(ctx, err)
 			}
 			responseHandler(writer, r)
 			// 将缓存的返回内容输出到客户端
@@ -112,7 +119,7 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 	u, err = url.Parse(upstream)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
-		writer.Write([]byte(http.StatusText(http.StatusInternalServerError)))
+		_, _ = writer.Write([]byte(http.StatusText(http.StatusInternalServerError)))
 		return
 	}
 	proxy := httputil.NewSingleHostReverseProxy(u)
@@ -132,9 +139,6 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 
 // 防盗链。如果防盗成功，那么返回true，否则false。
 func defendStealing(w http.ResponseWriter, r *http.Request) bool {
-	// 关闭防盗链
-	return false
-
 	if ext := gfile.ExtName(r.URL.Path); ext != "" {
 		switch ext {
 		case
