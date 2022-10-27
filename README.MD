@@ -6,6 +6,10 @@
 
 confluence使用到的一些资源文件。
 
+## confluence-heart
+
+健康检查，当confluence访问不通或者超时时重启confluence。
+
 ## confluence-proxy
 
 前置Nginx会将请求转发到proxy，proxy再请求到真实的confluence服务，并且中间会做些自定义的字符串替换。
