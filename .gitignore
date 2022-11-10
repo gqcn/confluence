@@ -18,3 +18,4 @@ go.sum
 .example/other/
 config.toml
 config.yaml
+temp/

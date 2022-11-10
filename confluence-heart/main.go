@@ -67,6 +67,8 @@ func restartConfluence(ctx context.Context) {
 	time.Sleep(time.Second * 5)
 	_ = gproc.ShellRun(ctx, fmt.Sprintf(`bash %s`, config.Shutdown))
 	time.Sleep(time.Second * 5)
+	_ = gproc.ShellRun(ctx, fmt.Sprintf(`bash %s`, config.Shutdown))
+	time.Sleep(time.Second * 10)
 	_ = gproc.ShellRun(ctx, fmt.Sprintf(`bash %s`, config.Startup))
 	time.Sleep(time.Minute * 3)
 }
