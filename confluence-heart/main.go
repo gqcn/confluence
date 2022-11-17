@@ -41,15 +41,15 @@ func main() {
 }
 
 func heartbeat(ctx context.Context) {
-	var (
-		ok = false
-	)
+	var ok = false
 	res, err := g.Client().Timeout(time.Second*10).Get(ctx, config.Address)
 	if err == nil && res != nil {
 		if res.StatusCode == http.StatusOK {
 			ok = true
+			heartBeatFailedCount.Set(0)
 		}
 	}
+
 	if !ok {
 		heartBeatFailedCount.Add(1)
 	}
@@ -63,12 +63,20 @@ func heartbeat(ctx context.Context) {
 func restartConfluence(ctx context.Context) {
 	g.Log().Infof(ctx, `restartConfluence start`)
 	defer g.Log().Infof(ctx, `restartConfluence end`)
+
+	// 正常停止confluence
 	_ = gproc.ShellRun(ctx, fmt.Sprintf(`bash %s`, config.Shutdown))
 	time.Sleep(time.Second * 5)
 	_ = gproc.ShellRun(ctx, fmt.Sprintf(`bash %s`, config.Shutdown))
 	time.Sleep(time.Second * 5)
 	_ = gproc.ShellRun(ctx, fmt.Sprintf(`bash %s`, config.Shutdown))
 	time.Sleep(time.Second * 10)
+
+	// 如果上面无法正常停止confluence，这里最后强制kill
+	_ = gproc.ShellRun(ctx, `killall -9 /home/john/Softs/confluence/jre//bin/java`)
+	time.Sleep(time.Second * 5)
+
+	// 启动confluence
 	_ = gproc.ShellRun(ctx, fmt.Sprintf(`bash %s`, config.Startup))
 	time.Sleep(time.Minute * 3)
 }
