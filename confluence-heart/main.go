@@ -30,13 +30,14 @@ var (
 	heartBeatFailedCount = gtype.NewInt()
 )
 
+// gf build -a amd64 -s linux
 func main() {
 	err := g.Cfg().MustGet(ctx, configKey).Scan(config)
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
 	gtimer.AddSingleton(ctx, time.Second*10, heartbeat)
-	g.Log().Infof(ctx, `let's start`)
+	g.Log().Infof(ctx, `ok, let's start`)
 	g.Listen()
 }
 
@@ -74,9 +75,11 @@ func restartConfluence(ctx context.Context) {
 
 	// 如果上面无法正常停止confluence，这里最后强制kill
 	_ = gproc.ShellRun(ctx, `killall -9 /home/john/Softs/confluence/jre//bin/java`)
+	_ = gproc.ShellRun(ctx, `killall -9 /home/john/Softs/confluence/jre/bin/java`)
+	_ = gproc.ShellRun(ctx, `killall -9 java`)
 	time.Sleep(time.Second * 5)
 
-	// 启动confluence
+	// 启动confluence，等待一段时间后再重新健康探测
 	_ = gproc.ShellRun(ctx, fmt.Sprintf(`bash %s`, config.Startup))
-	time.Sleep(time.Minute * 3)
+	time.Sleep(time.Minute * 10)
 }
